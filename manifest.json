@@ -1,0 +1,21 @@
+{
+
+    "manifest_version": 2,
+    "name": "Bulk Downloader",
+    "version": "0.1",
+  
+    "description": "Downloads files from multiple pages simultaneously",
+  
+    "icons": {
+      "48": "icons/BulkDownloaderLogo.png"
+    },
+
+    "browser_action": {
+      "default_icon": "icons/BulkDownloaderLogo.png",
+      "default_title": "Bulk Downloader",
+      "default_popup": "popup/main.html",
+      "browser_style": true
+    }
+    
+  
+  }

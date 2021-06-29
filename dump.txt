@@ -1,0 +1,6 @@
+"content_scripts": [
+      {
+        "matches": ["*://*.mozilla.org/*"],
+        "js": ["main.js"]
+      }
+    ]
