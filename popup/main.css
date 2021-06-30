@@ -16,10 +16,35 @@ html, body {
     border-radius: 6px;
     float: right;
     background-color: rgb(24, 36, 42);
-    
+    position:relative;
+    left: 150px;
+}
+
+.fileInput {
+  position:relative;
+  left: 5px;
+  bottom: 50px;
+  color:white;
 }
 
 .backdrop {
   height: 500px;
-  background-color: rgb(20, 32, 38)
+  background-color: rgb(20, 32, 38);
+  z-index: 0;
+  position:static;
+}
+
+.tabData {
+  width:100%;
+  max-width:200px;
+  height: 30px;
+  max-height: 30px;
+  display: table-cell;
+  vertical-align: middle;
+  text-align: center;
+  border: 1px solid rgb(255, 255, 255, 0.65);
+  background-color: #34b4eb;
+  color:white;
+  z-index: 1;
+  font-size: 1.5em;
 }
