@@ -15,7 +15,11 @@
         "browser_style": true
     },
 
+    "background": {
+        "scripts": ["background.js"]
+      },    
+
     "permissions": [
-        "tabs"
+        "tabs", "downloads"
     ]
 }
