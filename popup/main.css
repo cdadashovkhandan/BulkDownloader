@@ -53,7 +53,7 @@ html, body {
   height: 100px;
   border: 1px solid rgb(255, 255, 255, 0.65);
   border-radius: 4px;
-  background-color: #354952;
+  /* background-color: #354952; */
   color: white;
   font-family: monospace;
   overflow: hidden;
@@ -68,6 +68,10 @@ img, video {
   border: 1px solid white;
 }
 
-#selectedTab {
+.selected {
   background-color: #34b4eb;
+}
+
+.deselected {
+  background-color: #354952;
 }
