@@ -1,8 +1,13 @@
 // extra debug output
 var debug = true;
-var activeTabs = []
-var newTabs = []
+
+
+var selectedTabs = []
+var downloadableTabs = []
+
 var excludedFormats = [".asp", ".html", ".htm", ".php"]
+var videoFormats = [".mp4", ".mkv", ".webm", ".ogg"]
+
 // basic error handling
 function onError(error) { console.log(`Error: ${error}`);}
 
@@ -15,7 +20,7 @@ var downloadButton = document.getElementById('downloadButton');
 // download button logic
 downloadButton.addEventListener('click', async function() {
     console.log("boop");
-    for (let tab of activeTabs) {
+    for (let tab of selectedTabs) {
         console.log(tab.url);
         try {
             await browser.runtime.sendMessage(tab.url);
@@ -25,6 +30,34 @@ downloadButton.addEventListener('click', async function() {
     }
 });
 
+function displayTab(tab, format) {
+    var isVideo = videoFormats.includes(format); 
+    var table = document.getElementById("backdrop");
+    var row = table.insertRow();
+
+    var cell = row.insertCell()
+    cell.className = "tabData";
+    cell.innerHTML = tab.title.substring(0,17) + "...";
+    cell.id = "deselected"
+    var thumbnail = row.insertCell();
+    if (isVideo) {
+        thumbnail.innerHTML = `<video> <source src="${tab.url}" type="video/${format.substring(1)}"></video>`;
+    } else {
+        thumbnail.innerHTML = "<img src = \"" + tab.url + "\"></img>"
+    }
+    
+    cell.addEventListener('click', function() {
+        if (cell.id == "selected") {
+            cell.id = "deselected";
+            selectedTabs.pop(tab);
+            cell.style.backgroundColor = "#354952";
+        } else {
+            cell.id = "selected"
+            cell.style.backgroundColor = "#34b4eb";
+            selectedTabs.push(tab);
+        }
+    });
+}
 
 // Filter tabs to only the ones that contain files, then display them.
 function filterTabs(tabs) { 
@@ -33,33 +66,23 @@ function filterTabs(tabs) {
     for (let tab of tabs) {
         console.log("[DEBUG] TAB URL IS " + tab.url);
         var format = tab.url.match(regex);
+        if (format != null) {
+            format = format[0].toLowerCase();
+        } else continue;
+
         console.log("format = " + format);
         // TODO: might be a little bit naive with the magic number index
-        if(format != null && !excludedFormats.includes(format[0].toLowerCase()) ) newTabs.push(tab); 
+        if (format != null && !excludedFormats.includes(format) )  {
+            downloadableTabs.push(tab); 
+            displayTab(tab, format)
+        }
     }
     
     if (debug) {
         console.log("------TABS DETECTED------")
-        for (let tab of newTabs) {
+        for (let tab of downloadableTabs) {
             console.log(tab.url);
         }
-    }
-
-    // insert tabs into table
-    for (let tab of newTabs) {
-        var table = document.getElementById("backdrop");
-        var row = table.insertRow();
-
-        var cell = row.insertCell()
-        cell.className = "tabData";
-        cell.innerHTML = tab.title.substring(0,17) + "...";
-        var thumbnail = row.insertCell();
-        thumbnail.innerHTML = "<img src = \"" + tab.url + "\"></img>"
-        
-        cell.addEventListener('click', function() {
-            activeTabs.push(tab);
-            cell.style.backgroundColor = "#34b4eb"
-        });
     }
 }
 
