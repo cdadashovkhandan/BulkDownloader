@@ -1,12 +1,13 @@
-var allSelected = false;
+//TODO: globals in javascript are dangerous. Fix this shit.
 
-var selectedTabs = []
-var downloadableTabs = []
-
-var excludedFormats = [".asp", ".html", ".htm", ".php"]
-var videoFormats = [".mp4", ".mkv", ".webm", ".ogg"]
-
-var destinationPath = null;
+var globalNameSpace = {
+    allSelected:false,
+    selectedTabs:[],
+    downloadableTabs:[],
+    excludedFormats:[".asp", ".html", ".htm", ".php"],
+    videoFormats:[".mp4", ".mkv", ".webm", ".ogg"],
+    destinationPath:null
+};
 // Basic error handling
 function onError(error) { console.error(`Error: ${error}`);}
 
@@ -18,9 +19,9 @@ var selectAllButton = document.getElementById('selectAllButton');
 
 // Download button logic
 downloadButton.addEventListener('click', async function() {
-    for (let tab of selectedTabs) {
+    for (let tab of globalNameSpace.selectedTabs) {
         try {
-            await browser.runtime.sendMessage(JSON.stringify({tab: tab, path: destinationPath}));
+            await browser.runtime.sendMessage(JSON.stringify({tab: tab, path: globalNameSpace.destinationPath}));
         } catch (error) {
             console.error("downloadButton error: " + error.message)
         }
@@ -29,31 +30,31 @@ downloadButton.addEventListener('click', async function() {
 
 // Specify a folder name
 document.getElementById("fileInput").addEventListener("change", function(event) {
-    destinationPath = event.target.value; 
+    globalNameSpace.destinationPath = event.target.value; 
 });
 
 // (De-)select all elements
 selectAllButton.addEventListener('click', function() {
-    if (allSelected) {
+    if (globalNameSpace.allSelected) {
         var selectedItems = document.getElementsByClassName("tabData selected");
         while(selectedItems.length) {
             selectedItems[0].className = "tabData deselected";
         }
         
-        selectedTabs = [];
+        globalNameSpace.selectedTabs = [];
     } else {
         var deselectedItems = document.getElementsByClassName("tabData deselected");
         while(deselectedItems.length) {
             deselectedItems[0].className = "tabData selected";
         }
-        selectedTabs = [...downloadableTabs];
+        globalNameSpace.selectedTabs = [...globalNameSpace.downloadableTabs];
     } 
-    allSelected = !allSelected;
+    globalNameSpace.allSelected = !globalNameSpace.allSelected;
 })
 
 // Display a tab's thumbnail and filename as a selectable element in a table
 function displayTab(tab, format) {
-    var isVideo = videoFormats.includes(format); 
+    var isVideo = globalNameSpace.videoFormats.includes(format); 
     var table = document.getElementById("backdrop");
     var row = table.insertRow();
 
@@ -75,12 +76,12 @@ function displayTab(tab, format) {
     cell.addEventListener('click', function() {
         if (cell.className == "tabData selected") {    
             cell.className = "tabData deselected";
-            selectedTabs.pop(tab);
+            globalNameSpace.selectedTabs.pop(tab);
         } else {
             cell.className = "tabData selected"
-            selectedTabs.push(tab);
+            globalNameSpace.selectedTabs.push(tab);
         }
-        allSelected = (selectedTabs.length == downloadableTabs.length);
+        globalNameSpace.allSelected = (globalNameSpace.selectedTabs.length == globalNameSpace.downloadableTabs.length);
     });
 }
 
@@ -96,8 +97,8 @@ function filterTabs(tabs) {
             format = format[0].toLowerCase();
         } else continue;
 
-        if (format != null && !excludedFormats.includes(format) )  {
-            downloadableTabs.push(tab); 
+        if (!globalNameSpace.excludedFormats.includes(format))  {
+            globalNameSpace.downloadableTabs.push(tab); 
             tab.fileName = tab.url.match(fileNameRegex)[0];
             displayTab(tab, format)
         }
