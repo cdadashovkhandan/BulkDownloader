@@ -1,6 +1,4 @@
-//TODO: globals in javascript are dangerous. Fix this shit.
-
-var globalNameSpace = {
+var globals = {
     allSelected:false,
     selectedTabs:[],
     downloadableTabs:[],
@@ -19,9 +17,9 @@ var selectAllButton = document.getElementById('selectAllButton');
 
 // Download button logic
 downloadButton.addEventListener('click', async function() {
-    for (let tab of globalNameSpace.selectedTabs) {
+    for (let tab of globals.selectedTabs) {
         try {
-            await browser.runtime.sendMessage(JSON.stringify({tab: tab, path: globalNameSpace.destinationPath}));
+            await browser.runtime.sendMessage(JSON.stringify({tab: tab, path: globals.destinationPath}));
         } catch (error) {
             console.error("downloadButton error: " + error.message)
         }
@@ -30,58 +28,78 @@ downloadButton.addEventListener('click', async function() {
 
 // Specify a folder name
 document.getElementById("fileInput").addEventListener("change", function(event) {
-    globalNameSpace.destinationPath = event.target.value; 
+    globals.destinationPath = event.target.value; 
 });
 
 // (De-)select all elements
 selectAllButton.addEventListener('click', function() {
-    if (globalNameSpace.allSelected) {
+    if (globals.allSelected) {
         var selectedItems = document.getElementsByClassName("tabData selected");
         while(selectedItems.length) {
             selectedItems[0].className = "tabData deselected";
         }
         
-        globalNameSpace.selectedTabs = [];
+        globals.selectedTabs = [];
     } else {
         var deselectedItems = document.getElementsByClassName("tabData deselected");
         while(deselectedItems.length) {
             deselectedItems[0].className = "tabData selected";
         }
-        globalNameSpace.selectedTabs = [...globalNameSpace.downloadableTabs];
+        globals.selectedTabs = [...globals.downloadableTabs];
     } 
-    globalNameSpace.allSelected = !globalNameSpace.allSelected;
+    globals.allSelected = !globals.allSelected;
 })
 
 // Display a tab's thumbnail and filename as a selectable element in a table
 function displayTab(tab, format) {
-    var isVideo = globalNameSpace.videoFormats.includes(format); 
+    var isVideo = globals.videoFormats.includes(format); 
     var table = document.getElementById("backdrop");
     var row = table.insertRow();
 
     var cell = row.insertCell()
     cell.className = "tabData deselected";
-    cell.innerHTML = tab.fileName;
+    cell.textContent = tab.fileName;
 
     // Thumbnail generation
+    // Adapted from: https://devtidbits.com/2017/12/06/quick-fix-the-unsafe_var_assignment-warning-in-javascript/
+
     var thumbnail = row.insertCell();
-    if (isVideo) { //FIX: Currently displays nothing.
-        thumbnail.innerHTML = `<video> <source src="${tab.url}" type="video/${format.substring(1)}"> Your browser does not support the video tag</video>`;
-    } else if (format == ".pdf") { // Generic thumbnail for pdf, as they don't have thumbnails on their own.
-        thumbnail.innerHTML = "<img src = \"pdficon.png\"></img>"
-    } else {
-        thumbnail.innerHTML = "<img src = \"" + tab.url + "\"></img>"
+    const parser = new DOMParser();
+
+    thumbnail.innerHTML = ``;
+    let tags;
+    let thumb;
+    let parsed;
+
+    if (isVideo) { //FIX: Currently displays nothing for me, but works for others.
+        thumb = `<video> <source src="${tab.url}" type="video/${format.substring(1)}"> Your browser does not support the video tag</video>`;
+        parsed = parser.parseFromString(thumb, 'text/html');
+        tags = parsed.getElementsByTagName('video');
+    }  else {
+        if (format == ".pdf") { // Generic thumbnail for PDF's
+            thumb = "<img src = \"pdficon.png\"></img>"
+        } else {
+            thumb = "<img src = \"" + tab.url + "\"></img>";   
+        }
+        parsed = parser.parseFromString(thumb, 'text/html');
+        tags = parsed.getElementsByTagName('img');
     }
-    
+
+    for (const tag of tags) {
+        thumbnail.appendChild(tag);
+    }
+    //end of thumbnail generation
+
     // Selection functionality
     cell.addEventListener('click', function() {
         if (cell.className == "tabData selected") {    
             cell.className = "tabData deselected";
-            globalNameSpace.selectedTabs.pop(tab);
+            globals.selectedTabs.pop(tab);
         } else {
             cell.className = "tabData selected"
-            globalNameSpace.selectedTabs.push(tab);
+            globals.selectedTabs.push(tab);
         }
-        globalNameSpace.allSelected = (globalNameSpace.selectedTabs.length == globalNameSpace.downloadableTabs.length);
+        globals.allSelected = (globals.selectedTabs.length == globals.downloadableTabs.length);
     });
 }
 
@@ -97,8 +115,8 @@ function filterTabs(tabs) {
             format = format[0].toLowerCase();
         } else continue;
 
-        if (!globalNameSpace.excludedFormats.includes(format))  {
-            globalNameSpace.downloadableTabs.push(tab); 
+        if (!globals.excludedFormats.includes(format))  {
+            globals.downloadableTabs.push(tab); 
             tab.fileName = tab.url.match(fileNameRegex)[0];
             displayTab(tab, format)
         }
